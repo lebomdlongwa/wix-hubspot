@@ -12,15 +12,37 @@ A self-hosted Wix CLI app that bi-directionally syncs contacts between Wix and H
 | Backend (live) | https://beautiful-comfort-production-f20a.up.railway.app |
 | **Wix login email** | **lebo.wixhubspot@gmail.com** |
 | **Wix password** | **WixHubSpot123** |
+| **HubSpot login email** | **lebo.wixhubspot@gmail.com** |
+| **HubSpot password** | **WixHubSpot123** |
+| **HubSpot account** | **Zonke Tech Group** |
+| **Gmail (for 2FA code)** | **lebo.wixhubspot@gmail.com** |
+| **Gmail password** | **wixhubspot** |
 
-**To test end-to-end:**
-1. Log into [manage.wix.com](https://manage.wix.com) with the credentials above
-2. Open the **Wix-HubSpot-1** site → dashboard → **HubSpot Integration** app
-3. Click **Connect HubSpot** and complete the OAuth flow
-4. Add field mappings (Email → BOTH, First Name → BOTH, Last Name → BOTH)
-5. Create a contact in Wix → verify it appears in HubSpot within seconds
-6. Create a contact in HubSpot → verify it appears in Wix within seconds
-6. Submit a Wix form with an email → verify HubSpot contact is created with UTM data
+### Step-by-step: Opening the Dashboard
+
+1. Go to [manage.wix.com](https://manage.wix.com) and log in with `lebo.wixhubspot@gmail.com` / `WixHubSpot123`
+2. In the left sidebar, click **Custom Apps**
+3. Select **My New App-2**
+4. On the app home page, click the **Test App** dropdown
+5. Select **Test on dev site**
+6. In the popup that appears, scroll to the bottom and click the blue **"test from here"** link
+7. Select the **Wix-HubSpot-1** site and click **Test App** — the HubSpot Integration dashboard will open
+
+### Step-by-step: Connecting HubSpot
+
+8. Click the blue **Connect HubSpot** button
+9. In the new tab that opens, click **Send to your HubSpot account**
+10. Enter `lebo.wixhubspot@gmail.com` and `WixHubSpot123` as the HubSpot credentials
+11. A 6-digit verification code will be sent to `lebo.wixhubspot@gmail.com` — log into Gmail (password: `wixhubspot`) to retrieve it
+12. Select the **Zonke Tech Group** HubSpot account
+13. Click **Close This Tab** once the success page appears — you are now connected
+
+### Step-by-step: Testing sync
+
+14. Add field mappings: **Email → BOTH**, **First Name → BOTH**, **Last Name → BOTH** → click **Save Mappings**
+15. Create a contact in Wix (Customers & Leads → Contacts → New Contact) → verify it appears in HubSpot within seconds
+16. Create a contact in HubSpot (CRM → Contacts → Create contact) → verify it appears in Wix within seconds
+17. Submit the Wix form with an email → verify a HubSpot contact is created with UTM attribution data
 
 ---
 
