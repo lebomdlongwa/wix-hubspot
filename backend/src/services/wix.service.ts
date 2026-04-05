@@ -35,6 +35,24 @@ export async function getWixContact(contactId: string): Promise<WixContact> {
   return response.data.contact;
 }
 
+export async function createWixContact(
+  fields: Record<string, string>
+): Promise<string> {
+  const client = createWixClient();
+  const info = {};
+  Object.entries(fields).forEach(([key, value]) => {
+    const relativePath = key.startsWith('info.') ? key.slice(5) : key;
+    set(info, relativePath, value);
+  });
+  try {
+    const response = await client.post('/contacts/v4/contacts', { info });
+    return response.data?.contact?.id;
+  } catch (err: any) {
+    console.error('[createWixContact] error:', JSON.stringify(err?.response?.data ?? err?.message));
+    throw err;
+  }
+}
+
 export async function updateWixContact(
   contactId: string,
   fields: Record<string, string>

@@ -1,6 +1,6 @@
 import { PrismaClient, SyncStatus } from '@prisma/client';
 import { getTokens } from './token.service';
-import { applyWixToHubSpotMappings, applyHubSpotToWixMappings, WixContact, updateWixContact } from './wix.service';
+import { applyWixToHubSpotMappings, applyHubSpotToWixMappings, WixContact, updateWixContact, createWixContact } from './wix.service';
 import { createAuthenticatedClient } from './hubspot.service';
 
 const prisma = new PrismaClient();
@@ -118,15 +118,52 @@ export async function syncHubSpotContactToWix(
     where: { instanceId_hubspotContactId: { instanceId, hubspotContactId: hsContactId } },
   });
 
+  const mappings = await getActiveMappings(instanceId);
+  const wixFields = applyHubSpotToWixMappings(hsProperties, mappings);
+
+  // No existing mapping — fetch full HubSpot contact and create in Wix
   if (!existingMapping) {
-    await writeSyncLog(instanceId, 'HUBSPOT', 'SKIPPED', {
-      hubspotId: hsContactId,
-      skipReason: 'No matching Wix contact found for this HubSpot contact',
-    });
-    return { skipped: true, skipReason: 'no_wix_contact' };
+    try {
+      const { createAuthenticatedClient } = await import('./hubspot.service');
+      const client = createAuthenticatedClient(instanceId);
+      const hsResponse = await client.get(`/crm/v3/objects/contacts/${hsContactId}?properties=firstname,lastname,email,phone,jobtitle,company`);
+      const fullProps: Record<string, string> = { ...hsResponse.data.properties, ...hsProperties };
+      const fullWixFields = applyHubSpotToWixMappings(fullProps, mappings);
+
+      if (Object.keys(fullWixFields).length === 0) {
+        await writeSyncLog(instanceId, 'HUBSPOT', 'SKIPPED', {
+          hubspotId: hsContactId,
+          skipReason: 'No mapped fields to create Wix contact with',
+        });
+        return { skipped: true, skipReason: 'no_mapped_fields' };
+      }
+
+      const wixContactId = await createWixContact(fullWixFields);
+      await prisma.contactIdMapping.create({
+        data: {
+          instanceId,
+          wixContactId,
+          hubspotContactId: hsContactId,
+          lastSyncedBy: 'HUBSPOT',
+          lastSyncedAt: new Date(),
+        },
+      });
+      await writeSyncLog(instanceId, 'HUBSPOT', 'SUCCESS', {
+        wixId: wixContactId,
+        hubspotId: hsContactId,
+      });
+      return { skipped: false };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      await writeSyncLog(instanceId, 'HUBSPOT', 'ERROR', {
+        hubspotId: hsContactId,
+        errorMessage: message,
+      });
+      throw err;
+    }
   }
 
-  // Layer 3: DB timestamp check — did we sync this contact from HubSpot very recently?
+  // Layer 3: DB timestamp check — did we sync this contact from Wix very recently?
   const TEN_SECONDS = 10_000;
   if (
     existingMapping.lastSyncedBy === 'WIX' &&
@@ -139,9 +176,6 @@ export async function syncHubSpotContactToWix(
     });
     return { skipped: true, skipReason: 'recent_wix_sync' };
   }
-
-  const mappings = await getActiveMappings(instanceId);
-  const wixFields = applyHubSpotToWixMappings(hsProperties, mappings);
 
   try {
     await updateWixContact(existingMapping.wixContactId, wixFields);
