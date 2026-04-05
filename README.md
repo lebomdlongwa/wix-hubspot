@@ -9,16 +9,17 @@ A self-hosted Wix CLI app that bi-directionally syncs contacts between Wix and H
 | Detail | Value |
 |---|---|
 | GitHub repo | https://github.com/lebomdlongwa/wix-hubspot |
-| Wix dashboard | Open the app from your Wix site's dashboard |
 | Backend (live) | https://beautiful-comfort-production-f20a.up.railway.app |
-| HubSpot portal | Connected via OAuth — use "Connect HubSpot" button in the dashboard |
+| **Wix login email** | **lebo.wixhubspot@gmail.com** |
+| **Wix password** | **WixHubSpot123** |
 
 **To test end-to-end:**
-1. Open the Wix dashboard → HubSpot Integration app
-2. Click **Connect HubSpot** and complete the OAuth flow
-3. Add field mappings (Email → BOTH, First Name → BOTH, Last Name → BOTH)
-4. Create a contact in Wix → verify it appears in HubSpot
-5. Create a contact in HubSpot → verify it appears in Wix
+1. Log into [manage.wix.com](https://manage.wix.com) with the credentials above
+2. Open the **Wix-HubSpot-1** site → dashboard → **HubSpot Integration** app
+3. Click **Connect HubSpot** and complete the OAuth flow
+4. Add field mappings (Email → BOTH, First Name → BOTH, Last Name → BOTH)
+5. Create a contact in Wix → verify it appears in HubSpot within seconds
+6. Create a contact in HubSpot → verify it appears in Wix within seconds
 6. Submit a Wix form with an email → verify HubSpot contact is created with UTM data
 
 ---
