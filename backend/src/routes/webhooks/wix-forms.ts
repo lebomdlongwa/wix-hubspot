@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
-import { extractUtm, utmToHubSpotProperties, FormSubmission } from '../../services/utm.service';
+import { extractUtm, utmToHubSpotProperties, inferLeadSource, FormSubmission } from '../../services/utm.service';
 import { getTokens } from '../../services/token.service';
 import { createAuthenticatedClient } from '../../services/hubspot.service';
 import { wixClient } from '../../services/wix-sdk-client.service';
@@ -97,6 +97,8 @@ router.post('/', express.text({ type: '*/*' }), async (req: Request, res: Respon
   const properties: Record<string, string> = {
     email,
     ...utmProperties,
+    hs_lead_source: inferLeadSource(utm.utmMedium),
+    wix_sync_source: 'FORM',
   };
   if (firstName) properties['firstname'] = firstName;
   if (lastName) properties['lastname'] = lastName;
@@ -129,6 +131,9 @@ router.post('/', express.text({ type: '*/*' }), async (req: Request, res: Respon
         utmCampaign: utm.utmCampaign,
         utmTerm: utm.utmTerm,
         utmContent: utm.utmContent,
+        pageUrl: utm.pageUrl,
+        referrer: utm.referrer,
+        submittedAt: utm.submittedAt,
         rawSubmission: data as object,
         syncedAt: new Date(),
       },
