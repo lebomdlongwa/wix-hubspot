@@ -42,7 +42,14 @@ A self-hosted Wix CLI app that bi-directionally syncs contacts between Wix and H
 14. Add field mappings: **Email → BOTH**, **First Name → BOTH**, **Last Name → BOTH** → click **Save Mappings**
 15. Create a contact in Wix (Customers & Leads → Contacts → New Contact) → verify it appears in HubSpot within seconds
 16. Create a contact in HubSpot (CRM → Contacts → Create contact) → verify it appears in Wix within seconds
-17. Submit the Wix form with an email → verify a HubSpot contact is created with UTM attribution data
+
+### Step-by-step: Testing form submission (lead capture)
+
+17. In the Wix dashboard left sidebar, click **Site & Mobile App** → **Website**
+18. On the Website overview page, click the live site link in the website card — or go directly to [https://dev-sitex1857010668.wix-development-sites.org/](https://dev-sitex1857010668.wix-development-sites.org/)
+19. On the live site, locate the **Contact Form** and fill it in with a name and email address
+20. Submit the form
+21. In HubSpot (CRM → Contacts), verify a new contact was created with the submitted email — the contact will have UTM attribution fields (`utm_source`, `utm_medium`, `wix_sync_source=FORM`) populated
 
 ---
 
