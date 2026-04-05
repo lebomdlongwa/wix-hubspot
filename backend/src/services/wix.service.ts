@@ -102,6 +102,18 @@ export async function updateWixContact(
 }
 
 /**
+ * Applies a named transform to a string value before syncing.
+ */
+export function applyTransform(value: string, transform: string | null | undefined): string {
+  switch (transform) {
+    case 'trim': return value.trim();
+    case 'lowercase': return value.toLowerCase();
+    case 'uppercase': return value.toUpperCase();
+    default: return value;
+  }
+}
+
+/**
  * Reads a value from a WixContact using a dot-notation field key.
  * Uses lodash get for safe nested access including array indexes.
  * e.g. 'info.emails[0].email' → contact.info.emails[0].email
@@ -125,7 +137,7 @@ export function applyWixToHubSpotMappings(
   applicable.forEach((mapping) => {
     const value = extractWixField(contact, mapping.wixField);
     if (value !== undefined) {
-      properties[mapping.hubspotProperty] = value;
+      properties[mapping.hubspotProperty] = applyTransform(value, mapping.transform);
     }
   });
 
@@ -146,7 +158,7 @@ export function applyHubSpotToWixMappings(
   applicable.forEach((mapping) => {
     const value = get(hsProperties, mapping.hubspotProperty);
     if (value != null) {
-      fields[mapping.wixField] = String(value);
+      fields[mapping.wixField] = applyTransform(String(value), mapping.transform);
     }
   });
 
