@@ -79,6 +79,10 @@ const HubSpotDashboard: FC = () => {
 
   const [syncing, setSyncing] = useState(false);
 
+  const showToast = useCallback((message: string, type: 'error' | 'success') => {
+    try { dashboard.showToast({ message, type }); } catch { /* Wix SDK context unavailable */ }
+  }, []);
+
   // Fetch connection status
   const fetchConnectionStatus = useCallback(async (id: string) => {
     setConnectionLoading(true);
@@ -88,15 +92,12 @@ const HubSpotDashboard: FC = () => {
       const data: ConnectionStatus = await res.json();
       setConnectionStatus(data);
     } catch {
-      dashboard.showToast({
-        message: 'Failed to load HubSpot connection status.',
-        type: 'error',
-      });
+      showToast('Failed to load HubSpot connection status.', 'error');
       setConnectionStatus({ connected: false });
     } finally {
       setConnectionLoading(false);
     }
-  }, []);
+  }, [showToast]);
 
   // Fetch mappings when connected
   const fetchMappings = useCallback(async (id: string) => {
@@ -117,33 +118,51 @@ const HubSpotDashboard: FC = () => {
         }))
       );
     } catch {
-      dashboard.showToast({
-        message: 'Failed to load field mappings.',
-        type: 'error',
-      });
+      showToast('Failed to load field mappings.', 'error');
     } finally {
       setMappingsLoading(false);
     }
-  }, []);
+  }, [showToast]);
 
   // Load instanceId on mount
   useEffect(() => {
+    // Safety net: never spin forever
+    const timeout = setTimeout(() => {
+      setConnectionLoading((prev) => {
+        if (prev) {
+          console.warn('[HubSpot] Loading timed out, resetting to disconnected');
+          setConnectionStatus((s) => s ?? { connected: false });
+        }
+        return false;
+      });
+    }, 8000);
+
     const init = async () => {
       try {
-        // Resolve instanceId from the Wix instance JWT in the URL
         let id = '';
-        const params = new URLSearchParams(window.location.search);
-        const instanceJwt = params.get('instance');
-        if (instanceJwt) {
-          try {
-            const payload = JSON.parse(atob(instanceJwt.split('.')[1]));
-            id = payload.instanceId ?? '';
-          } catch {
-            // ignore
+
+        // Primary: extract metaSiteId from URL path /dashboard/[siteId]/...
+        const pathParts = window.location.pathname.split('/');
+        const dashboardIdx = pathParts.indexOf('dashboard');
+        if (dashboardIdx !== -1 && pathParts[dashboardIdx + 1]) {
+          id = pathParts[dashboardIdx + 1];
+        }
+
+        // Fallback: parse the Wix instance JWT from URL query string
+        if (!id) {
+          const params = new URLSearchParams(window.location.search);
+          const instanceJwt = params.get('instance');
+          if (instanceJwt) {
+            try {
+              const payload = JSON.parse(atob(instanceJwt.split('.')[1]));
+              id = payload.instanceId ?? '';
+            } catch {
+              // ignore
+            }
           }
         }
 
-        console.log('[HubSpot] instanceId:', id);
+        console.log('[HubSpot] instanceId:', id, '| href:', window.location.href);
         setInstanceId(id);
         if (id) {
           await fetchConnectionStatus(id);
@@ -156,9 +175,12 @@ const HubSpotDashboard: FC = () => {
         console.error('[HubSpot] Failed to get instanceId:', err);
         setConnectionLoading(false);
         setConnectionStatus({ connected: false });
+      } finally {
+        clearTimeout(timeout);
       }
     };
     init();
+    return () => clearTimeout(timeout);
   }, [fetchConnectionStatus]);
 
   // Fetch mappings whenever connection becomes active
@@ -196,9 +218,9 @@ const HubSpotDashboard: FC = () => {
       if (!res.ok) throw new Error('Disconnect failed');
       setConnectionStatus({ connected: false });
       setMappingRows([]);
-      dashboard.showToast({ message: 'HubSpot disconnected successfully.', type: 'success' });
+      showToast('HubSpot disconnected successfully.', 'success');
     } catch {
-      dashboard.showToast({ message: 'Failed to disconnect HubSpot.', type: 'error' });
+      showToast('Failed to disconnect HubSpot.', 'error');
     } finally {
       setDisconnecting(false);
     }
@@ -237,9 +259,9 @@ const HubSpotDashboard: FC = () => {
         }),
       });
       if (!res.ok) throw new Error('Save failed');
-      dashboard.showToast({ message: 'Mappings saved successfully.', type: 'success' });
+      showToast('Mappings saved successfully.', 'success');
     } catch {
-      dashboard.showToast({ message: 'Failed to save mappings.', type: 'error' });
+      showToast('Failed to save mappings.', 'error');
     } finally {
       setSavingMappings(false);
     }
@@ -252,9 +274,9 @@ const HubSpotDashboard: FC = () => {
         method: 'POST',
       });
       if (!res.ok) throw new Error('Sync failed');
-      dashboard.showToast({ message: 'Manual sync completed successfully.', type: 'success' });
+      showToast('Manual sync completed successfully.', 'success');
     } catch {
-      dashboard.showToast({ message: 'Manual sync failed. Please try again.', type: 'error' });
+      showToast('Manual sync failed. Please try again.', 'error');
     } finally {
       setSyncing(false);
     }
