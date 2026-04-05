@@ -104,8 +104,8 @@ router.post('/', express.text({ type: '*/*' }), async (req: Request, res: Respon
   try {
     // Upsert HubSpot contact by email using auto-refreshing authenticated client
     const client = createAuthenticatedClient(instanceId);
-    const response = await client.post(
-      '/crm/v3/objects/contacts',
+    const response = await client.patch(
+      `/crm/v3/objects/contacts/${encodeURIComponent(email)}`,
       { properties },
       { params: { idProperty: 'email' } }
     );
