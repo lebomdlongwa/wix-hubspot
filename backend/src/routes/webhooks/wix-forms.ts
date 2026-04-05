@@ -74,7 +74,10 @@ router.post('/', express.text({ type: '*/*' }), async (req: Request, res: Respon
 
   for (const [key, entry] of Object.entries(submissionsMap)) {
     const normalizedKey = key.toLowerCase();
-    const value = entry.value != null ? String(entry.value) : null;
+    // Handle both {value: ...} object format and flat string format
+    const value = entry != null && typeof entry === 'object' && 'value' in entry
+      ? (entry.value != null ? String(entry.value) : null)
+      : (entry != null ? String(entry) : null);
     if (normalizedKey.includes('email')) email = value;
     if (normalizedKey.includes('first')) firstName = value;
     if (normalizedKey.includes('last')) lastName = value;
