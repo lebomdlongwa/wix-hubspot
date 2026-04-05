@@ -158,7 +158,20 @@ export async function syncHubSpotContactToWix(
       }
 
       console.log('[syncHS→Wix] creating contact with fields:', JSON.stringify(fullWixFields));
-      const wixContactId = await createWixContact(fullWixFields);
+      let wixContactId: string;
+      try {
+        wixContactId = await createWixContact(fullWixFields);
+      } catch (createErr: any) {
+        const duplicateId: string | undefined =
+          createErr?.response?.data?.details?.applicationError?.data?.duplicateContactId;
+        if (duplicateId) {
+          console.log('[syncHS→Wix] duplicate detected, updating existing contact:', duplicateId);
+          await updateWixContact(duplicateId, fullWixFields);
+          wixContactId = duplicateId;
+        } else {
+          throw createErr;
+        }
+      }
       await prisma.contactIdMapping.create({
         data: {
           instanceId,
