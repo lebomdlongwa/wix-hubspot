@@ -39,11 +39,27 @@ export async function createWixContact(
   fields: Record<string, string>
 ): Promise<string> {
   const client = createWixClient();
-  const info = {};
-  Object.entries(fields).forEach(([key, value]) => {
-    const relativePath = key.startsWith('info.') ? key.slice(5) : key;
-    set(info, relativePath, value);
-  });
+
+  // Build structured info directly from known field keys
+  const info: Record<string, any> = {};
+
+  const firstName = fields['info.name.first'];
+  const lastName = fields['info.name.last'];
+  const email = fields['info.emails[0].email'];
+  const phone = fields['info.phones[0].phone'];
+  const city = fields['info.addresses[0].city'];
+  const country = fields['info.addresses[0].country'];
+  const postalCode = fields['info.addresses[0].postalCode'];
+  const companyName = fields['info.company.name'];
+  const jobTitle = fields['info.jobTitle'];
+
+  if (firstName || lastName) info.name = { first: firstName, last: lastName };
+  if (email) info.emails = { items: [{ email, tag: 'UNTAGGED' }] };
+  if (phone) info.phones = { items: [{ phone, tag: 'UNTAGGED' }] };
+  if (city || country || postalCode) info.addresses = { items: [{ city, country, postalCode }] };
+  if (companyName) info.company = { name: companyName };
+  if (jobTitle) info.jobTitle = jobTitle;
+
   try {
     const response = await client.post('/contacts/v4/contacts', { info });
     return response.data?.contact?.id;
