@@ -89,7 +89,14 @@ export async function updateWixContact(
   try {
     await client.patch(`/contacts/v4/contacts/${contactId}`, { revision, info });
   } catch (err: any) {
-    console.error('[updateWixContact] error:', JSON.stringify(err?.response?.data ?? err?.message));
+    // Retry once with fresh revision on conflict
+    if (err?.response?.status === 409) {
+      const retryGet = await client.get(`/contacts/v4/contacts/${contactId}`);
+      const freshRevision = retryGet.data?.contact?.revision;
+      await client.patch(`/contacts/v4/contacts/${contactId}`, { revision: freshRevision, info });
+      return;
+    }
+    console.error('[updateWixContact] error:', err?.response?.data ? JSON.stringify(err.response.data) : err?.message);
     throw err;
   }
 }
