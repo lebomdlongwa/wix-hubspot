@@ -104,14 +104,25 @@ router.post('/', express.text({ type: '*/*' }), async (req: Request, res: Respon
   if (lastName) properties['lastname'] = lastName;
 
   try {
-    // Upsert HubSpot contact by email using auto-refreshing authenticated client
+    // Upsert HubSpot contact by email: PATCH updates existing, POST creates new
     const client = createAuthenticatedClient(instanceId);
-    const response = await client.patch(
-      `/crm/v3/objects/contacts/${encodeURIComponent(email)}`,
-      { properties },
-      { params: { idProperty: 'email' } }
-    );
-    const hubspotContactId: string = response.data.id;
+    let hubspotContactId: string;
+    try {
+      const response = await client.patch(
+        `/crm/v3/objects/contacts/${encodeURIComponent(email)}`,
+        { properties },
+        { params: { idProperty: 'email' } }
+      );
+      hubspotContactId = response.data.id;
+    } catch (patchErr: any) {
+      if (patchErr?.response?.status === 404) {
+        // Contact doesn't exist yet — create it
+        const createResponse = await client.post('/crm/v3/objects/contacts', { properties });
+        hubspotContactId = createResponse.data.id;
+      } else {
+        throw patchErr;
+      }
+    }
 
     // Ensure AppInstallation exists
     await prisma.appInstallation.upsert({
