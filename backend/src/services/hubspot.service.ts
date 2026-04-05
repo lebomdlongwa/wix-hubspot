@@ -55,21 +55,30 @@ export function createAuthenticatedClient(instanceId: string): AxiosInstance {
   return client;
 }
 
-export async function ensureWixSyncSourceProperty(instanceId: string): Promise<void> {
-  const client = createAuthenticatedClient(instanceId);
+async function ensureProperty(client: ReturnType<typeof createAuthenticatedClient>, name: string, label: string): Promise<void> {
   try {
-    await client.get('/crm/v3/properties/contacts/wix_sync_source');
+    await client.get(`/crm/v3/properties/contacts/${name}`);
   } catch (err: any) {
     if (err.response?.status === 404) {
       await client.post('/crm/v3/properties/contacts', {
-        name: 'wix_sync_source',
-        label: 'Wix Sync Source',
+        name,
+        label,
         type: 'string',
         fieldType: 'text',
         groupName: 'contactinformation',
       });
     }
   }
+}
+
+export async function ensureWixSyncSourceProperty(instanceId: string): Promise<void> {
+  const client = createAuthenticatedClient(instanceId);
+  await ensureProperty(client, 'wix_sync_source', 'Wix Sync Source');
+  await ensureProperty(client, 'utm_source', 'UTM Source');
+  await ensureProperty(client, 'utm_medium', 'UTM Medium');
+  await ensureProperty(client, 'utm_campaign', 'UTM Campaign');
+  await ensureProperty(client, 'utm_term', 'UTM Term');
+  await ensureProperty(client, 'utm_content', 'UTM Content');
 }
 
 export async function getHubSpotProperties(instanceId: string): Promise<HubSpotProperty[]> {
