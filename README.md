@@ -4,6 +4,57 @@ A self-hosted Wix CLI app that bi-directionally syncs contacts between Wix and H
 
 ---
 
+## Testing the App
+
+| Detail | Value |
+|---|---|
+| GitHub repo | https://github.com/lebomdlongwa/wix-hubspot |
+| Backend (live) | https://beautiful-comfort-production-f20a.up.railway.app |
+| **Wix login email** | **lebo.wixhubspot@gmail.com** |
+| **Wix password** | **WixHubSpot123** |
+
+**To test end-to-end:**
+1. Log into [manage.wix.com](https://manage.wix.com) with the credentials above
+2. Open the **Wix-HubSpot-1** site → dashboard → **HubSpot Integration** app
+3. Click **Connect HubSpot** and complete the OAuth flow
+4. Add field mappings (Email → BOTH, First Name → BOTH, Last Name → BOTH)
+5. Create a contact in Wix → verify it appears in HubSpot within seconds
+6. Create a contact in HubSpot → verify it appears in Wix within seconds
+6. Submit a Wix form with an email → verify HubSpot contact is created with UTM data
+
+---
+
+## API Plan
+
+### Feature 1 — OAuth Connect/Disconnect
+
+| API | Why |
+|---|---|
+| **HubSpot OAuth 2.0** (`GET /oauth/authorize`, `POST /oauth/v1/token`) | Industry-standard OAuth flow. No API keys are stored in or exposed to the frontend — the authorization code is exchanged server-side for access + refresh tokens. |
+| **HubSpot Token Info API** (`GET /oauth/v1/access-tokens/:token`) | Used immediately after token exchange to retrieve the portal ID and portal name, so we can display the connected portal in the dashboard UI. |
+| **HubSpot CRM Properties API** (`POST /crm/v3/properties/contacts`) | Called once on connect to auto-create custom contact properties (`utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term`, `wix_sync_source`, `wix_form_submitted_at`) so they are available in HubSpot before any sync runs. |
+| **Wix `@wix/essentials` SDK** | Used in the frontend to retrieve the Wix `instanceId` from the authenticated session — this is the unique identifier that ties a Wix site to its HubSpot tokens. |
+
+### Feature 2 — Bi-directional Contact Sync
+
+| API | Why |
+|---|---|
+| **Wix Contacts v4 Webhooks** (`contact_created`, `contact_updated`) | Event-driven — no polling needed. Wix pushes a signed JWT payload to our backend the moment a contact changes, giving real-time sync with zero latency overhead. |
+| **HubSpot Webhooks API** (`contact.creation`, `contact.propertyChange`) | Same reasoning as above — HubSpot pushes changes to our backend instantly rather than requiring periodic polling, which would be slower and wasteful of API quota. |
+| **HubSpot CRM Contacts API** (`PATCH /crm/v3/objects/contacts/:id?idProperty=email`) | PATCH with `idProperty=email` performs an upsert — creates the contact if it doesn't exist, updates it if it does. Chosen over POST because it avoids 409 duplicate errors and is idempotent. |
+| **Wix Contacts v4 API** (`GET`, `POST`, `PATCH /contacts/v4/contacts`) | GET is used to fetch the current revision before PATCH (Wix v4 requires the revision field for optimistic concurrency). POST creates new contacts. PATCH updates existing ones. |
+| **HubSpot CRM Properties API** (`GET /crm/v3/properties/contacts`) | Fetched when the field mapping UI loads so users can select from all available HubSpot properties — including custom ones — without us hardcoding a list. |
+
+### Feature 3 — Wix Form → HubSpot Lead Capture
+
+| API | Why |
+|---|---|
+| **Wix Forms v2 Webhook** (`wix.forms.v2.submission_created`) | Fires on every form submission. The payload contains all form field values, allowing us to extract email, name, and hidden UTM fields in a single event — no polling or follow-up API call needed. |
+| **HubSpot CRM Contacts API** (`PATCH /crm/v3/objects/contacts/:email?idProperty=email`) | PATCH by email upserts the contact — existing leads are enriched with UTM data rather than creating duplicates. |
+| **HubSpot CRM Properties API** | `hs_lead_source` (native HubSpot property) is set based on `utm_medium` to populate HubSpot's built-in lead source reports. Custom UTM properties are set for full attribution tracking. |
+
+---
+
 ## Architecture
 
 ```
