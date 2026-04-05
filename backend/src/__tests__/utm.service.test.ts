@@ -75,18 +75,24 @@ describe('utmToHubSpotProperties', () => {
       utmCampaign: 'launch',
       utmTerm: null,
       utmContent: null,
+      pageUrl: null,
+      referrer: null,
+      submittedAt: '2026-01-01T00:00:00.000Z',
     });
-    expect(props).toEqual({ utm_source: 'facebook', utm_campaign: 'launch' });
+    expect(props).toEqual({ utm_source: 'facebook', utm_campaign: 'launch', wix_form_submitted_at: '2026-01-01T00:00:00.000Z' });
   });
 
-  it('returns empty object when all UTM params are null', () => {
+  it('returns only timestamp when all UTM params are null', () => {
     const props = utmToHubSpotProperties({
       utmSource: null,
       utmMedium: null,
       utmCampaign: null,
       utmTerm: null,
       utmContent: null,
+      pageUrl: null,
+      referrer: null,
+      submittedAt: '2026-01-01T00:00:00.000Z',
     });
-    expect(props).toEqual({});
+    expect(props).toEqual({ wix_form_submitted_at: '2026-01-01T00:00:00.000Z' });
   });
 });

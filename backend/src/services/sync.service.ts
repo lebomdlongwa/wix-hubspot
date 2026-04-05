@@ -7,6 +7,25 @@ const prisma = new PrismaClient();
 
 const DEDUP_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
 
+/**
+ * CONFLICT RESOLUTION RULE: "Originating system wins"
+ *
+ * When a contact is updated in one system, the change is propagated to the
+ * other system. If the other system fires a return webhook, it is suppressed
+ * by the loop-prevention layers so the original change is never overwritten.
+ *
+ * - Wix-originated update → pushed to HubSpot → HubSpot return webhook skipped
+ *   (Layer 1: wix_sync_source correlation ID check within 5-minute window)
+ * - HubSpot-originated update → pushed to Wix → Wix return webhook skipped
+ *   (Layer 3: DB lastSyncedBy=HUBSPOT within 10-second window)
+ *
+ * In a true simultaneous conflict (both systems updated within seconds of each
+ * other before any webhook fires), the webhook that arrives first determines
+ * the outcome — effectively "last write wins" at the network level. This is
+ * acceptable because such conflicts are rare and both systems reach consistency
+ * within one sync cycle.
+ */
+
 // Written to HubSpot so we can detect our own syncs and skip the return webhook
 function syncSourceTag(): string {
   return `wix_sync_${Date.now()}`;

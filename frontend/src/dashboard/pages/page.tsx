@@ -34,13 +34,22 @@ const DIRECTION_OPTIONS: Array<{ id: string; value: string }> = [
   { id: 'BOTH', value: 'Bi-directional' },
 ];
 
+const TRANSFORM_OPTIONS: Array<{ id: string; value: string }> = [
+  { id: 'none', value: 'None' },
+  { id: 'trim', value: 'Trim whitespace' },
+  { id: 'lowercase', value: 'Lowercase' },
+  { id: 'uppercase', value: 'Uppercase' },
+];
+
 type Direction = 'WIX_TO_HS' | 'HS_TO_WIX' | 'BOTH';
+type Transform = 'none' | 'trim' | 'lowercase' | 'uppercase';
 
 interface MappingRow {
   id: string;
   wixField: string;
   hubspotProperty: string;
   direction: Direction;
+  transform: Transform;
 }
 
 interface ConnectionStatus {
@@ -49,7 +58,7 @@ interface ConnectionStatus {
 }
 
 interface MappingsResponse {
-  mappings: Array<{ wixField: string; hubspotProperty: string; direction: Direction }>;
+  mappings: Array<{ wixField: string; hubspotProperty: string; direction: Direction; transform: Transform }>;
   wixFields: Array<{ key: string; label: string }>;
   hubspotProperties: Array<{ name: string; label: string; type: string }>;
 }
@@ -106,6 +115,7 @@ const HubSpotDashboard: FC = () => {
           wixField: m.wixField,
           hubspotProperty: m.hubspotProperty,
           direction: m.direction,
+          transform: m.transform ?? 'none',
         }))
       );
     } catch {
@@ -209,7 +219,7 @@ const HubSpotDashboard: FC = () => {
   const handleAddRow = () => {
     setMappingRows((prev) => [
       ...prev,
-      { id: generateId(), wixField: '', hubspotProperty: '', direction: 'WIX_TO_HS' },
+      { id: generateId(), wixField: '', hubspotProperty: '', direction: 'WIX_TO_HS', transform: 'none' },
     ]);
   };
 
@@ -230,10 +240,11 @@ const HubSpotDashboard: FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          mappings: mappingRows.map(({ wixField, hubspotProperty, direction }) => ({
+          mappings: mappingRows.map(({ wixField, hubspotProperty, direction, transform }) => ({
             wixField,
             hubspotProperty,
             direction,
+            transform,
           })),
         }),
       });
@@ -296,6 +307,17 @@ const HubSpotDashboard: FC = () => {
           options={DIRECTION_OPTIONS}
           selectedId={row.direction}
           onSelect={(option) => handleRowChange(row.id, 'direction', String(option.id) as Direction)}
+          size="small"
+        />
+      ),
+    },
+    {
+      title: 'Transform',
+      render: (row: MappingRow) => (
+        <Dropdown
+          options={TRANSFORM_OPTIONS}
+          selectedId={row.transform}
+          onSelect={(option) => handleRowChange(row.id, 'transform', String(option.id) as Transform)}
           size="small"
         />
       ),

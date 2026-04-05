@@ -6,10 +6,13 @@ import { getTokens } from '../../services/token.service';
 const router = Router();
 const prisma = new PrismaClient();
 
+const VALID_TRANSFORMS = ['none', 'trim', 'lowercase', 'uppercase'] as const;
+
 const MappingSchema = z.object({
   wixField: z.string().min(1),
   hubspotProperty: z.string().min(1),
   direction: z.nativeEnum(SyncDirection),
+  transform: z.enum(VALID_TRANSFORMS).default('none'),
 });
 
 const SaveMappingsSchema = z.object({
@@ -64,6 +67,7 @@ router.post('/:instanceId', async (req: Request, res: Response) => {
         wixField: m.wixField,
         hubspotProperty: m.hubspotProperty,
         direction: m.direction,
+        transform: m.transform,
         isActive: true,
       })),
     }),

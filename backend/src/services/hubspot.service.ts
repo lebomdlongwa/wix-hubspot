@@ -79,6 +79,7 @@ export async function ensureWixSyncSourceProperty(instanceId: string): Promise<v
   await ensureProperty(client, 'utm_campaign', 'UTM Campaign');
   await ensureProperty(client, 'utm_term', 'UTM Term');
   await ensureProperty(client, 'utm_content', 'UTM Content');
+  await ensureProperty(client, 'wix_form_submitted_at', 'Wix Form Submitted At');
 }
 
 export async function getHubSpotProperties(instanceId: string): Promise<HubSpotProperty[]> {

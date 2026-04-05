@@ -51,6 +51,7 @@ model FieldMapping {
   wixField        String
   hubspotProperty String
   direction       SyncDirection
+  transform       String        @default("none")
   isActive        Boolean       @default(true)
 
   installation AppInstallation @relation(fields: [instanceId], references: [instanceId])
@@ -82,6 +83,9 @@ model FormSubmissionLog {
   utmCampaign      String?
   utmTerm          String?
   utmContent       String?
+  pageUrl          String?
+  referrer         String?
+  submittedAt      String?
   rawSubmission    Json
   syncedAt         DateTime?
 
