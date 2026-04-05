@@ -48,7 +48,7 @@ export async function createWixContact(
     const response = await client.post('/contacts/v4/contacts', { info });
     return response.data?.contact?.id;
   } catch (err: any) {
-    console.error('[createWixContact] error:', JSON.stringify(err?.response?.data ?? err?.message));
+    console.error('[createWixContact] error:', err?.response?.data ? JSON.stringify(err.response.data) : err?.message);
     throw err;
   }
 }
