@@ -1,7 +1,5 @@
 import React, { type FC, useState, useEffect, useCallback } from 'react';
 import { dashboard } from '@wix/dashboard';
-import { auth } from '@wix/essentials';
-// auth.getTokenInfo() returns TokenInfo including instanceId (app instance ID)
 import {
   Badge,
   Box,
@@ -132,26 +130,16 @@ const HubSpotDashboard: FC = () => {
   useEffect(() => {
     const init = async () => {
       try {
-        // Try @wix/essentials first
+        // Resolve instanceId from the Wix instance JWT in the URL
         let id = '';
-        try {
-          const tokenInfo = await auth.getTokenInfo();
-          id = tokenInfo.instanceId ?? '';
-        } catch {
-          // ignore
-        }
-
-        // Fallback: parse the Wix instance JWT from the URL
-        if (!id) {
-          const params = new URLSearchParams(window.location.search);
-          const instanceJwt = params.get('instance');
-          if (instanceJwt) {
-            try {
-              const payload = JSON.parse(atob(instanceJwt.split('.')[1]));
-              id = payload.instanceId ?? '';
-            } catch {
-              // ignore
-            }
+        const params = new URLSearchParams(window.location.search);
+        const instanceJwt = params.get('instance');
+        if (instanceJwt) {
+          try {
+            const payload = JSON.parse(atob(instanceJwt.split('.')[1]));
+            id = payload.instanceId ?? '';
+          } catch {
+            // ignore
           }
         }
 
