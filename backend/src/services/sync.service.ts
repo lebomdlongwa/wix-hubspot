@@ -138,6 +138,7 @@ export async function syncHubSpotContactToWix(
         return { skipped: true, skipReason: 'no_mapped_fields' };
       }
 
+      console.log('[syncHS→Wix] creating contact with fields:', JSON.stringify(fullWixFields));
       const wixContactId = await createWixContact(fullWixFields);
       await prisma.contactIdMapping.create({
         data: {
