@@ -9,7 +9,7 @@ A self-hosted Wix CLI app that bi-directionally syncs contacts between Wix and H
 | Detail | Value |
 |---|---|
 | GitHub repo | https://github.com/lebomdlongwa/wix-hubspot |
-| Backend (live) | https://beautiful-comfort-production-f20a.up.railway.app |
+| Backend | Deployed on Railway — no action needed, the frontend connects to it automatically |
 | **Wix login email** | **lebo.wixhubspot@gmail.com** |
 | **Wix password** | **WixHubSpot123** |
 | **HubSpot login email** | **lebo.wixhubspot@gmail.com** |
