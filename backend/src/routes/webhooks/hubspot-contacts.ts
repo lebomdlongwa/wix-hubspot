@@ -94,17 +94,19 @@ router.post('/', async (req: Request, res: Response) => {
       }
 
       if (isCorrelationIdFresh(hsProperties['wix_sync_source'])) {
+        logger.info('HubSpot contact skipped: correlation_id', { instanceId, hsContactId, wixSyncSource: hsProperties['wix_sync_source'] });
         return { contactId: hsContactId, status: 'skipped', reason: 'correlation_id' };
       }
 
       const dedupKey = event.propertyName ? `${hsContactId}:${event.propertyName}` : hsContactId;
       const alreadySeen = await checkAndMark('hs-to-wix', portalId, dedupKey);
       if (alreadySeen) {
+        logger.info('HubSpot contact skipped: dedup', { instanceId, hsContactId, dedupKey });
         return { contactId: hsContactId, status: 'skipped', reason: 'dedup' };
       }
 
       const result = await syncHubSpotContactToWix(instanceId, hsContactId, hsProperties);
-      logger.info('HubSpot contact processed', { instanceId, hsContactId, skipped: result.skipped });
+      logger.info('HubSpot contact processed', { instanceId, hsContactId, skipped: result.skipped, skipReason: result.skipReason });
       return {
         contactId: hsContactId,
         status: result.skipped ? 'skipped' : 'ok',
