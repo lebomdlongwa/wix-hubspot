@@ -31,7 +31,7 @@ A self-hosted Wix CLI app that bi-directionally syncs contacts between Wix and H
 ### Step-by-step: Connecting HubSpot
 
 8. Click the blue **Connect HubSpot** button
-9. In the new tab that opens, click **Send to your HubSpot account**
+9. In the new tab that opens, click **Sign in to your HubSpot account**
 10. Enter `lebo.wixhubspot@gmail.com` and `WixHubSpot123` as the HubSpot credentials
 11. A 6-digit verification code will be sent to `lebo.wixhubspot@gmail.com` — log into Gmail (password: `wixhubspot`) to retrieve it
 12. Select the **Zonke Tech Group** HubSpot account
