@@ -149,6 +149,10 @@ export async function syncHubSpotContactToWix(
       const fullProps: Record<string, string> = { ...hsResponse.data.properties, ...hsProperties };
       const fullWixFields = applyHubSpotToWixMappings(fullProps, mappings);
 
+      console.log('[syncHS→Wix] mappings:', JSON.stringify(mappings.map(m => ({ hs: m.hubspotProperty, wix: m.wixField, dir: m.direction }))));
+      console.log('[syncHS→Wix] fullProps keys:', Object.keys(fullProps));
+      console.log('[syncHS→Wix] fullWixFields:', JSON.stringify(fullWixFields));
+
       if (Object.keys(fullWixFields).length === 0) {
         await writeSyncLog(instanceId, 'HUBSPOT', 'SKIPPED', {
           hubspotId: hsContactId,
